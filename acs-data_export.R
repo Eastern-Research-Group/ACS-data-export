@@ -18,7 +18,7 @@ library(sf)
 #Load ACS data provided by Julia. This is in the "simple feature" format.
 load("P:/Steam Supplemental/11 EJ Coordination/from EPA/ACS/acs_data_2019_block group.Rdata")
 
-#Remove geometry from ACS data. This changes it from simple feature to data frame format.
+#Remove geometry from ACS data. This changes it from simple feature to data frame format. Confirmed that leading zeros in GEOID were retained.
 data2 <- st_set_geometry(data, NULL)
 
 #Change GEOID variable from character to numeric for semi_join to work.
@@ -33,16 +33,17 @@ db_conn <- odbcConnectAccess2007("P:/Steam Supplemental/11 EJ Coordination/01 - 
 #Create dataframe in R with Census blocks without loads for 2022. These were identified by using Kristi's 'Crosswalk_092122.accdb' database in the same location, and filtering table 'Final_COMID to FIPs Crosswalk' on "Baseline_2022" = 1. I exported the resulting 188 FIPS codes to Excel and saved as a CSV.
 #**Note that this is different from the list of FIPS codes used for the JTA analysis coding, because those included COMIDs without loads. Also note that there are duplicates in this list.
 
-FIPStext <- read.delim("P:/Steam Supplemental/11 EJ Coordination/01 - Demographics analysis/FIPS_list.txt", as.is = TRUE, stringsAsFactors = FALSE)
+#FIPStext <- read.delim("P:/Steam Supplemental/11 EJ Coordination/01 - Demographics analysis/FIPS_list.txt", as.is = TRUE, stringsAsFactors = FALSE)
 
-tmpDF <- read.table(file = "P:/Steam Supplemental/11 EJ Coordination/01 - Demographics analysis/FIPS_list.txt", header = TRUE, sep = "\t",
+#Reading in a .txt version of the FIPS list (from the COMID crosswalk in the same fild location). Used .txt file and set the columns to be characters to avoid losing the leading zeros.
+FIPSlist <- read.table(file = "P:/Steam Supplemental/11 EJ Coordination/01 - Demographics analysis/FIPS_list.txt", header = TRUE, sep = "\t",
                     comment.char = "", colClasses = 'character')
 
 
 #Create dataframe in R with unique Census blocks for 2022. Note that this is different from the original 'CBlist' above, which was based on 2020.
-uniqueFIPS <- read.csv("P:/Steam Supplemental/10 EA/04 Supplemental Analyses/Census Block GIS/unique-census-blocks-with-loads.csv", header = FALSE)
+#uniqueFIPS <- read.csv("P:/Steam Supplemental/10 EA/04 Supplemental Analyses/Census Block GIS/unique-census-blocks-with-loads.csv", header = FALSE)
 
-uniqueFIPS2 <- read.csv("P:/Steam Supplemental/10 EA/04 Supplemental Analyses/Census Block GIS/Jan6FIPS.csv", colClasses=c("numeric"))
+#uniqueFIPS2 <- read.csv("P:/Steam Supplemental/10 EA/04 Supplemental Analyses/Census Block GIS/Jan6FIPS.csv", colClasses=c("numeric"))
 
 #names(uniqueFIPS) <- c('FIPS')
 
@@ -57,17 +58,14 @@ uniqueFIPS2 <- read.csv("P:/Steam Supplemental/10 EA/04 Supplemental Analyses/Ce
   #mutate(FIPS = as.numeric(FIPS))
 
 #Create subset with only 188 unique Census blocks of interest.Filter the ACS data to only include rows data for the 222 unique Census blocks. 
-ACS_filtered <- semi_join(x= data2, y= tmpDF, by= c("GEOID" = "FIPS"))
+ACS_filtered <- semi_join(x= data2, y= FIPSlist, by= c("GEOID" = "FIPS"))
 
+#Confirming that the number of unique GEOID codes in the filtered table matched the number of unique FIPS codes in the crosswalk (177 in both cases).
 length(unique(ACS_filtered$GEOID))
-length(unique(numtest$GEOID))
-length(unique(tmpDF$FIPS))
-
-#Checking number of unique Census blocks in the filtered dataset. Total is 205 for Option 1.
-length(unique(Option1_filtered$CB))
+length(unique(FIPSlist$FIPS))
 
 #Export the extracted data to the database.
-sqlSave(db_conn2, Option1_filtered, rownames = FALSE, colnames = FALSE, safer = FALSE, addPK = FALSE, fast = FALSE)
+sqlSave(db_conn, ACS_filtered, rownames = FALSE, colnames = FALSE, safer = FALSE, addPK = FALSE, fast = FALSE)
 
 #Export the list of 2022 Census blocks to the database.
 sqlSave(db_conn2,CBlist2, rownames = FALSE, colnames = FALSE, safer = FALSE, addPK = FALSE, fast = FALSE)
@@ -113,6 +111,5 @@ all_equal(Opt3_CBs, Opt4_CBs, ignore_row_order = TRUE)
 
 
 
-#Close the ODBC connection. Close db_conn2 for the 2022 Proposal analysis. db_conn is from the initial exploration and has been commented out.
-#odbcClose(db_conn)
-odbcClose(db_conn2)
+#Close the ODBC connection.
+odbcClose(db_conn)
