@@ -15,25 +15,29 @@ library(Rcpp)
 install.packages("sf", type = "source")
 library(sf)
 
-
 #Load ACS data provided by Julia. This is in the "simple feature" format.
 load("P:/Steam Supplemental/11 EJ Coordination/from EPA/ACS/acs_data_2019_block group.Rdata")
 
 #Remove geometry from ACS data. This changes it from simple feature to data frame format.
 data2 <- st_set_geometry(data, NULL)
 
+#Change GEOID variable from character to numeric for semi_join to work.
+#data3 <- data2 %>%
+ # mutate(GEOID = as.numeric(GEOID))
 
-#Needed new database for the Proposal analysis, because the folder structure had changed. Outside of R, set up DSN to connect to new blank Access database through ODBC. Created a User DSN named "ACS-data-raw".
+#Outside of R, set up DSN to connect to new blank Access database through ODBC. Created a User DSN named "ACS-data-raw".
 
 #Connect to the blank Access database using the Access 2007 version of the ODBC connection command.
 db_conn <- odbcConnectAccess2007("P:/Steam Supplemental/11 EJ Coordination/01 - Demographics analysis/acs-data-exported_01062023.accdb")
 
-#Create dataframe in R with unique Census blocks without loads for 2022. These were identified by using Kristi's 'Crosswalk_092122.accdb' database in the same location, and filtering table 'Final_COMID to FIPs Crosswalk' on "Baseline_2022" = 1. I exported the resulting 188 FIPS codes to Excel and saved as a CSV. (Note that this is different from the list of FIPS codes used for the JTA analysis coding, because those included COMIDs without loads.)
+#Create dataframe in R with Census blocks without loads for 2022. These were identified by using Kristi's 'Crosswalk_092122.accdb' database in the same location, and filtering table 'Final_COMID to FIPs Crosswalk' on "Baseline_2022" = 1. I exported the resulting 188 FIPS codes to Excel and saved as a CSV.
+#**Note that this is different from the list of FIPS codes used for the JTA analysis coding, because those included COMIDs without loads. Also note that there are duplicates in this list.
 
+FIPStext <- read.delim("P:/Steam Supplemental/11 EJ Coordination/01 - Demographics analysis/FIPS_list.txt", as.is = TRUE, stringsAsFactors = FALSE)
 
-#Change GEOID variable from character to numeric for semi_join to work.
-numtest <- data2 %>%
-  mutate(GEOID = as.numeric(GEOID))
+tmpDF <- read.table(file = "P:/Steam Supplemental/11 EJ Coordination/01 - Demographics analysis/FIPS_list.txt", header = TRUE, sep = "\t",
+                    comment.char = "", colClasses = 'character')
+
 
 #Create dataframe in R with unique Census blocks for 2022. Note that this is different from the original 'CBlist' above, which was based on 2020.
 uniqueFIPS <- read.csv("P:/Steam Supplemental/10 EA/04 Supplemental Analyses/Census Block GIS/unique-census-blocks-with-loads.csv", header = FALSE)
@@ -53,11 +57,11 @@ uniqueFIPS2 <- read.csv("P:/Steam Supplemental/10 EA/04 Supplemental Analyses/Ce
   #mutate(FIPS = as.numeric(FIPS))
 
 #Create subset with only 188 unique Census blocks of interest.Filter the ACS data to only include rows data for the 222 unique Census blocks. 
-ACS_filtered <- semi_join(x= numtest, y= uniqueFIPS2, by= c("GEOID" = "FIPS"))
+ACS_filtered <- semi_join(x= data2, y= tmpDF, by= c("GEOID" = "FIPS"))
 
 length(unique(ACS_filtered$GEOID))
 length(unique(numtest$GEOID))
-length(unique(uniqueFIPS2$FIPS))
+length(unique(tmpDF$FIPS))
 
 #Checking number of unique Census blocks in the filtered dataset. Total is 205 for Option 1.
 length(unique(Option1_filtered$CB))
