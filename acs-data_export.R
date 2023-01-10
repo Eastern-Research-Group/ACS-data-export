@@ -69,9 +69,10 @@ sqlSave(db_conn, ACS_filtered, rownames = FALSE, colnames = FALSE, safer = FALSE
 
 #Create list of unique FIPS codes with loads for 2022 Proposal EA.
 Unique_FIPS2022 <- unique(ACS_filtered$GEOID)
+Unique_FIPS2022_df <- data.frame(Unique_FIPS2022)
 
 #Export the list of unique FIPS codes to the database.
-sqlSave(db_conn,Unique_FIPS2022, rownames = FALSE, colnames = FALSE, safer = FALSE, addPK = FALSE, fast = FALSE)
+sqlSave(db_conn,Unique_FIPS2022_df, rownames = FALSE, colnames = FALSE, safer = FALSE, addPK = FALSE, fast = FALSE)
 
 #Close the ODBC connection.
 odbcClose(db_conn)
