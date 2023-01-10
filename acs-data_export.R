@@ -26,8 +26,8 @@ data2 <- st_set_geometry(data, NULL)
 #Connect to the blank Access database using the Access 2007 version of the ODBC connection command.
 db_conn <- odbcConnectAccess2007("P:/Steam Supplemental/11 EJ Coordination/01 - Demographics analysis/acs-data-exported_01062023.accdb")
 
-#Load list of Census blocks with loads for the 2022 Proposal EA. These were identified by using Kristi's 'Crosswalk_092122.accdb' database in the following filepath: "P:\Steam Supplemental\10 EA\04 Supplemental Analyses\Census Block GIS". In Access, I filtered table 'Final_COMID to FIPs Crosswalk' on "Baseline_2022" = 1. I exported the resulting 188 FIPS codes to Excel and saved as a .txt file.
-#**Note that this is different from the list of FIPS codes used for the JTA analysis coding, because those included COMIDs without loads. Also note that there are duplicate FIPS codes in this list. There are 188 entries in the FIPS to COMID crosswalk, and 177 unique FIPS codes.
+#Load list of Census blocks with loads for the 2022 Proposal EA. I started with the 'Census Block_COMID_crosswalk' Excel spreadsheet located in the '01 - Demographics analysis' folder. I copied the 188 FIPS codes to a new Excel spreadsheet and saved as a .txt file.
+#**Note that this differs from the list of FIPS codes used for the JTA analysis coding, because those included COMIDs without loads. Also note that there are duplicate FIPS codes in this list. There are 188 entries in the FIPS to COMID crosswalk, and 177 unique FIPS codes.
 
 #Reading in the .txt version of the FIPS list. Set the columns to be characters to avoid losing the leading zeros.
 FIPSlist <- read.table(file = "P:/Steam Supplemental/11 EJ Coordination/01 - Demographics analysis/FIPS_list.txt", header = TRUE, sep = "\t",
