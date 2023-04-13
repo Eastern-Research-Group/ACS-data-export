@@ -1,0 +1,3 @@
+# ACS-data-export
+## Code to filter and export American Community Survey data for FIPS codes of interest.
+The R script is used to extract relevant Census information for an analysis used as part of the Steam Electric Effluent Limitations & Guidelines rulemaking. Jill and Amie (copied here) are likely to be the only people using it in the future. It uses Census data provided by our EPA client, filters the relevant data, and sends it to an Access database as tables. The script includes packages to download in R, and all other details for running the script should be included in comments. The user will need to add a User DSN to create an ODBC as part of the analysis, but that’s noted in the comments.
